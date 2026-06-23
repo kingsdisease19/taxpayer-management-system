@@ -15,3 +15,12 @@ class TaxpayerService:
                 detail=f"Taxpayer with TPIN '{taxpayer_data.tpin}' already exists."
             )
         return self.repository.create(taxpayer_data)
+
+    def get_taxpayer(self, taxpayer_id: int):
+        taxpayer = self.repository.get_by_id(taxpayer_id)
+        if not taxpayer:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Taxpayer with id {taxpayer_id} not found."
+            )
+        return taxpayer

@@ -9,6 +9,9 @@ class TaxpayerRepository:
     def get_by_tpin(self, tpin: str):
         return self.db.query(Taxpayer).filter(Taxpayer.tpin == tpin).first()
 
+    def get_by_id(self, taxpayer_id: int):
+        return self.db.query(Taxpayer).filter(Taxpayer.id == taxpayer_id).first()
+
     def create(self, taxpayer_data: TaxpayerCreate) -> Taxpayer:
         taxpayer = Taxpayer(**taxpayer_data.model_dump())
         self.db.add(taxpayer)

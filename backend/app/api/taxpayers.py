@@ -10,3 +10,8 @@ router = APIRouter(prefix="/taxpayers", tags=["Taxpayers"])
 def create_taxpayer(taxpayer_data: TaxpayerCreate, db: Session = Depends(get_db)):
     service = TaxpayerService(db)
     return service.create_taxpayer(taxpayer_data)
+
+@router.get("/{taxpayer_id}", response_model=TaxpayerResponse)
+def get_taxpayer(taxpayer_id: int, db: Session = Depends(get_db)):
+    service = TaxpayerService(db)
+    return service.get_taxpayer(taxpayer_id)
