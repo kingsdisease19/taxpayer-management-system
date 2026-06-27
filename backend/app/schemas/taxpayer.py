@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, field_validator
-from typing import Optional
+from typing import Optional, List, Generic, TypeVar
 from datetime import datetime
 
 class TaxpayerCreate(BaseModel):
@@ -43,3 +43,27 @@ class TaxpayerResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+T = TypeVar('T')
+
+class PaginatedResponse(BaseModel, Generic[T]):
+    """
+    Generic pagination wrapper.
+    Can wrap any type of data (List[TaxpayerResponse], List[UserResponse], etc.)
+    """
+    items: List[T]
+    total: int
+    page: int
+    limit: int
+    total_pages: int
+
+    @field_validator('total_pages', mode='before')
+    @classmethod
+    def calculate_total_pages(cls, v, values):
+        """Auto-calculate total_pages from total and limit"""
+        if 'total' in values.data and 'limit' in values.data:
+            total = values.data['total']
+            limit = values.data['limit']
+            return (total + limit - 1) // limit  # Ceiling division
+        return v
