@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from typing import Optional
 from app.repositories.taxpayer_repository import TaxpayerRepository
-from app.schemas.taxpayer import TaxpayerCreate
+from app.schemas.taxpayer import TaxpayerCreate, TaxpayerUpdate
 
 class TaxpayerService:
     def __init__(self, db: Session):
@@ -27,6 +27,61 @@ class TaxpayerService:
                 detail=f"Taxpayer with id {taxpayer_id} not found."
             )
         return taxpayer
+
+    def update_taxpayer(self, taxpayer_id: int, taxpayer_data: TaxpayerUpdate):
+        """
+        Update a taxpayer.
+        Raises 404 if taxpayer not found.
+        """
+        taxpayer = self.repository.get_by_id(taxpayer_id)
+        if not taxpayer:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Taxpayer with id {taxpayer_id} not found."
+            )
+        
+        # If new email is provided, check it's not already used by another taxpayer
+        if taxpayer_data.email and taxpayer_data.email != taxpayer.email:
+            existing = self.repository.get_by_email(taxpayer_data.email)
+            if existing:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Email '{taxpayer_data.email}' is already in use."
+                )
+        
+        # Convert Pydantic model to dict, excluding None values
+        update_dict = taxpayer_data.model_dump(exclude_none=True)
+        
+        # Update the taxpayer
+        updated_taxpayer = self.repository.update(taxpayer_id, update_dict)
+        
+        return updated_taxpayer
+
+    def delete_taxpayer(self, taxpayer_id: int):
+        """
+        Delete a taxpayer.
+        Raises 404 if taxpayer not found.
+        """
+        taxpayer = self.repository.get_by_id(taxpayer_id)
+        if not taxpayer:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Taxpayer with id {taxpayer_id} not found."
+            )
+        
+        # TODO: Check if taxpayer has documents/registrations
+        # For now, allow deletion. In production, you'd check dependencies.
+        
+        success = self.repository.delete(taxpayer_id)
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to delete taxpayer."
+            )
+        return success
+    
+    # Retrieve all taxpayers with pagination and filtering
+
 
     def get_all_taxpayers(
         self,

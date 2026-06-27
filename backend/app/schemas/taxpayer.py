@@ -2,6 +2,7 @@ from pydantic import BaseModel, EmailStr, field_validator
 from typing import Optional, List, Generic, TypeVar
 from datetime import datetime
 
+# Define Pydantic models for taxpayer data
 class TaxpayerCreate(BaseModel):
     tpin: str
     taxpayer_type: str
@@ -28,6 +29,7 @@ class TaxpayerCreate(BaseModel):
         return v.lower()
 
 
+# Response model for returning taxpayer data
 class TaxpayerResponse(BaseModel):
     id: int
     tpin: str
@@ -44,9 +46,10 @@ class TaxpayerResponse(BaseModel):
     class Config:
         from_attributes = True
 
-
+# Generic pagination wrapper
 T = TypeVar('T')
 
+# this class is a generic pagination wrapper that can wrap any type of data (e.g., List[TaxpayerResponse], List[UserResponse], etc.)
 class PaginatedResponse(BaseModel, Generic[T]):
     """
     Generic pagination wrapper.
@@ -67,3 +70,26 @@ class PaginatedResponse(BaseModel, Generic[T]):
             limit = values.data['limit']
             return (total + limit - 1) // limit  # Ceiling division
         return v
+
+class TaxpayerUpdate(BaseModel):
+    """
+    Schema for updating a taxpayer.
+    Excludes immutable fields (id, tpin, created_at).
+    """
+    taxpayer_type: Optional[str] = None
+    business_name: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[EmailStr] = None
+    address: Optional[str] = None
+
+    @field_validator("taxpayer_type")
+    @classmethod
+    def taxpayer_type_valid(cls, v):
+        if v is None:
+            return v
+        allowed = {"individual", "business"}
+        if v.lower() not in allowed:
+            raise ValueError(f"taxpayer_type must be one of {allowed}")
+        return v.lower()    
