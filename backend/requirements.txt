@@ -1,4 +1,5 @@
 alembic
+bcrypt
 email-validator
 fastapi
 psycopg2-binary
