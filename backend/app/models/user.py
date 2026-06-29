@@ -1,6 +1,13 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime
+import enum
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Enum as SQLEnum
 from sqlalchemy.sql import func
 from app.db.base import Base
+
+
+class RoleEnum(str, enum.Enum):
+    REGISTRATION_OFFICER = "registration_officer"
+    SUPERVISOR = "supervisor"
+    ADMINISTRATOR = "administrator"
 
 # User model for the database.
 # This model maps to the `users` table and defines the columns used to store user data.
@@ -19,17 +26,15 @@ class User(Base):
     # Primary key for the user table
     id = Column(Integer, primary_key=True, index=True)
 
-    # Username must be unique and is required for each user
-    username = Column(String, unique=True, index=True, nullable=False)
+    # Unique username for the user, used for login or identification
+    username = Column(String(50), unique=True, index=True, nullable=False)
+    
+    email = Column(String(120), unique=True, index=True, nullable=False)
+    
+    # Hashed password for the user, stored securely
+    password_hash = Column(String(255), nullable=False)  # bcrypt hashes are ~60 chars
 
-    # Email address must be unique and is required
-    email = Column(String, unique=True, index=True, nullable=False)
-
-    # Stored password hash for authentication
-    password_hash = Column(String, nullable=False)
-
-    # Role of the user in the application
-    role = Column(String, nullable=False, default="registration_officer")
+    role = Column(SQLEnum(RoleEnum), nullable=False, default=RoleEnum.REGISTRATION_OFFICER)
 
     # Indicates whether the user account is active
     is_active = Column(Boolean, default=True)
